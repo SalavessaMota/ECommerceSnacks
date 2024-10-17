@@ -30,7 +30,7 @@ namespace ApiECommerce.Controllers
             }
             else if (Search == "maisvendido")
             {
-                _products = await _productRepository.GetPopularProductsAsync();
+                _products = await _productRepository.GetBestSellerProductsAsync();
             }
             else
             {

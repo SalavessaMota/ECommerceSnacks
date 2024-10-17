@@ -32,7 +32,7 @@ namespace ApiECommerce.Controllers
             var checkUser = await _appDbContext.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
             if (checkUser != null)
             {
-                return BadRequest("Já existe um utilizador com este email.");
+                return BadRequest("There is already an user with that email.");
             }
 
             _appDbContext.Users.Add(user);
@@ -48,7 +48,7 @@ namespace ApiECommerce.Controllers
 
             if (currentUser == null)
             { 
-                return NotFound("O utilizador não existe"); 
+                return NotFound("The user doesnt exist"); 
             }
 
             var key = _config["JWT:Key"] ?? throw new ArgumentNullException("JWT:Key", "JWT:Key cannot be null.");
@@ -80,7 +80,7 @@ namespace ApiECommerce.Controllers
         }
 
         [Authorize]
-        [HttpPost("uploadimage")]
+        [HttpPost("uploaduserimage")]
         public async Task<IActionResult> UploadUserPhoto(IFormFile image)
         {
             var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
@@ -88,7 +88,7 @@ namespace ApiECommerce.Controllers
 
             if (user == null) 
             {
-                return NotFound("Utilizador não encontrado");
+                return NotFound("User not found");
             }
 
             if(image != null)
@@ -105,16 +105,16 @@ namespace ApiECommerce.Controllers
                 user.UrlImage = $"/userimages/{uniqueFileName}";
 
                 await _appDbContext.SaveChangesAsync();
-                return Ok("Imagem enviada com sucesso");
+                return Ok("Image uploaded successfully");
             }
 
-            return BadRequest("Nenhuma imagem enviada");
+            return BadRequest("No image uploaded");
         }
 
 
         [Authorize]
-        [HttpGet("userimage")]
-        public async Task<IActionResult> GetUserImage()
+        [HttpGet("[action]")]
+        public async Task<IActionResult> UserProfileImage()
         {
             //see if user is logged
             var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
@@ -124,7 +124,7 @@ namespace ApiECommerce.Controllers
 
             if(user == null)
             {
-                return NotFound("Utilizador não encontrado");
+                return NotFound("User not found");
             }
 
             var userImage = await _appDbContext.Users

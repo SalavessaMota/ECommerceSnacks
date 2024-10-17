@@ -29,12 +29,12 @@ namespace ApiECommerce.Controllers
                 .Where(cart => cart.ClientId == order.UserId)
                 .ToListAsync();
 
-            if (shoppingCartItems.Count == 0) 
+            if (shoppingCartItems.Count == 0)
             {
                 return NotFound("Não existem items no carrinho para criar o pedido.");
             }
 
-            using(var transaction = await _appDbContext.Database.BeginTransactionAsync()) 
+            using (var transaction = await _appDbContext.Database.BeginTransactionAsync())
             {
                 try
                 {
@@ -65,7 +65,7 @@ namespace ApiECommerce.Controllers
                 catch (Exception)
                 {
                     await transaction.RollbackAsync();
-                    return BadRequest("Ocorreu um erro ao processar o pedido.");
+                    return BadRequest("An error occorred while processing the order.");
                 }
             }
         }
@@ -87,25 +87,34 @@ namespace ApiECommerce.Controllers
                                      DataPedido = pedido.DataPedido,
                                  }).ToListAsync();*/
 
-            var orders = await _appDbContext.Orders
+            //var orders = await _appDbContext.Orders
+            //    .Where(o => o.UserId == userId)
+            //    .OrderByDescending(o => o.OrderDate)
+            //    .Select(o => new
+            //    {
+            //        Id = o.Id,
+            //        Total = o.Total,
+            //        OrderDate = o.OrderDate,
+            //    })
+            //    .ToListAsync();
+
+            var orders = await _appDbContext.Orders.AsNoTracking()
                 .Where(o => o.UserId == userId)
                 .OrderByDescending(o => o.OrderDate)
-                .Select(o => new
+                .Select(order => new
                 {
-                    Id = o.Id,
-                    Total = o.Total,
-                    OrderDate = o.OrderDate,
-                })
-                .ToListAsync();
+                    Id = order.Id,
+                    Total = order.Total,
+                    OrderDate = order.OrderDate,
+                }).ToListAsync();
 
             if (orders == null || orders.Count == 0)
             {
-                return NotFound("Não foram encontrados pedidos para o utilizador especificado.");
+                return NotFound("No orders found for the user.");
             }
 
             return Ok(orders);
         }
-
 
         // GET: api/Orders/OrderDetails/5
         // Retorna os detalhes de um pedido específico, incluindo informações sobre
@@ -129,24 +138,36 @@ namespace ApiECommerce.Controllers
                                             ProdutoPreco = produto.Preco
                                         }).ToListAsync();*/
 
-            var orderDetails = await _appDbContext.OrderDetails
-                .Where(od => od.OrderId == orderId)
-                .Include(od => od.Order)
-                .Include(od => od.Product)
-                .Select(od => new
-                {
-                    Id = od.Id,
-                    Quantity = od.Quantity,
-                    SubTotal = od.Total,
-                    ProductName = od.Product!.Name,
-                    ProductImage = od.Product.UrlImage,
-                    Price = od.Product.Price
-                })
-                .ToListAsync();
+            //var orderDetails = await _appDbContext.OrderDetails
+            //    .Where(od => od.OrderId == orderId)
+            //    .Include(od => od.Order)
+            //    .Include(od => od.Product)
+            //    .Select(od => new
+            //    {
+            //        Id = od.Id,
+            //        Quantity = od.Quantity,
+            //        SubTotal = od.Total,
+            //        ProductName = od.Product!.Name,
+            //        ProductImage = od.Product.UrlImage,
+            //        Price = od.Product.Price
+            //    })
+            //    .ToListAsync();
 
-            if (orderDetails == null || orderDetails.Count == 0)
+            var orderDetails = await _appDbContext.OrderDetails.AsNoTracking()
+                .Where(od => od.OrderId == orderId)
+                .Select(orderDetail => new
+                {
+                    Id = orderDetail.Id,
+                    Quantity = orderDetail.Quantity,
+                    SubTotal = orderDetail.Total,
+                    ProductName = orderDetail.Product!.Name,
+                    ProductImage = orderDetail.Product.UrlImage,
+                    Price = orderDetail.Product.Price
+                }).ToListAsync();
+
+            if (!orderDetails.Any())
             {
-                return NotFound("Detalhes do pedido não encontrados.");
+                return NotFound("Order details not found.");
             }
 
             return Ok(orderDetails);
